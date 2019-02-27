@@ -1,3 +1,4 @@
+//TEAMWORK WITH KATHRIN REIßNER
 window.addEventListener("load", async () => {
   /** Represents a 2d point */
   interface Point {
