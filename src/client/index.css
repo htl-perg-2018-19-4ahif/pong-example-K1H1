@@ -7,7 +7,7 @@ html, body {
 }
 
 body {
-    background-color: lightgray;
+    background-color: lightgrey;
 }
 
 #ball {
@@ -21,7 +21,7 @@ body {
     position: absolute;
     width: 20px;
     height: 100px;
-    background-color: red;
+    background-color: darkgreen;
     left: 50px;
 }
 
@@ -29,24 +29,25 @@ html {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.left_score {
+    text-align: center;
+    color: darkgreen;
+    font-size: 20px;
+    font-weight: bold;
+}
 .right_paddle {
     position: absolute;
     width: 20px;
     height: 100px;
-    background-color: blue;
+    background-color: darkblue;
     right: 50px;
 }
 
-.left_score {
-    text-align: center;
-    color: red;
-    font-size: 20px;
-    font-weight: bold;
-}
+
 
 .right_score {
     text-align: center;
-    color: blue;
+    color: darkblue;
     font-size: 20px;
     font-weight: bold;
 

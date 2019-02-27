@@ -14,14 +14,16 @@ window.addEventListener("load", async () => {
   /** Represents directions  */
   enum Direction { top, right, bottom, left, leftPaddle, rightPaddle };
 
-  // Get some information about the browser window and the ball. This information will
-  // never change. So it makes sense to get it only once to make the rest of the program faster.
+  //-----------BALL-----------------
+  //information about the browser window and the ball.
   const ball = document.getElementById('ball');
   const ballSize: Size = { width: ball.clientWidth, height: ball.clientHeight };
   const ballHalfSize = splitSize(ballSize, 2);
   const clientSize: Size = { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight };
   const clientHalfSize = splitSize(clientSize, 2);
 
+
+  //--------PADDLE----------
   //Paddle
   const paddle = <HTMLDivElement>document.getElementsByClassName('left_paddle')[0];
   const paddleHeight = paddle.clientHeight;
@@ -37,9 +39,7 @@ window.addEventListener("load", async () => {
   let direction: number;
 
   document.addEventListener('keydown', event => {
-    // We have to check whether a movement is already in progress. This is
-    // necessary because keydown events arrive often when key is
-    // continuously pressed.
+    // check if a movement is already in progress
     if (!interval) {
       switch (event.code) {
         case 'ArrowDown':
@@ -94,6 +94,9 @@ window.addEventListener("load", async () => {
       paddle.style.setProperty('top', `${currentPaddlePosition}px`);
     }
   }
+
+
+  //-------------Game Loop-------------------
   let out: boolean;
   game();
   let score_left: number = 0;
@@ -114,7 +117,7 @@ window.addEventListener("load", async () => {
     do {
 
       // Calculate target.
-      // X-coordinate iw either right or left border of browser window (depending on
+      // X-coordinate is either right or left border of browser window (depending on
       //              target quadrant)
       // y-coordinate is calculated using tangens angle function of angle
       //              (note: tan(angle) = delta-y / delta-x). The sign depends on
@@ -127,24 +130,21 @@ window.addEventListener("load", async () => {
 
       // Animate ball to calculated target position
       const borderTouch = await animateBall(ballCurrentPosition, targetBallPosition);
-      
+
       // Based on where the ball touched the browser window, we change the new target quadrant.
       // Note that in this solution the angle stays the same.
       switch (borderTouch.touchDirection) {
         case Direction.left:
-          //points
+          // add points
           score_right++;
-
           $('.right_score')[0].innerHTML = score_right + "";
           out = true;
           break;
         case Direction.right:
-          //quadrant = (quadrant === 0) ? 3 : 2;
-          //points
+
+          // addpoints
           score_left++;
           $('.left_score')[0].innerHTML = score_left + "";
-          //ballCurrentPosition = { x: clientHalfSize.width, y: clientHalfSize.height };
-          //moveBall(ballCurrentPosition);
           out = true;
           break;
         case Direction.leftPaddle: quadrant = (quadrant === 2) ? 1 : 0; break;
@@ -160,19 +160,19 @@ window.addEventListener("load", async () => {
       }
 
       // The touch position is the new current position of the ball.
-      // Note that we fix the position here slightly in case a small piece of the ball has reached an area
-      // outside of the visible browser window.
       ballCurrentPosition.x = Math.min(Math.max(borderTouch.touchPosition.x - ballHalfSize.width, 0) + ballHalfSize.width, clientSize.width);
       ballCurrentPosition.y = Math.min(Math.max(borderTouch.touchPosition.y - ballHalfSize.height, 0) + ballHalfSize.height, clientSize.height);
     } while (!out);
     game();
   }
+
+
+
+
+  //-------------------------------------BALL----------------------------
   /**
    * Animate the ball from the current position to the target position. Stops
-   * animation if border of browser window is reached.
-   * @returns Position and direction where ball touched the border of the browser window
-   *          at the end of the animation
-   */
+   * animation if border of browser window is reached. */
   function animateBall(currentBallPosition: Point, targetBallPosition: Point): Promise<{ touchPosition: Point, touchDirection: Direction }> {
     // Calculate x and y distances from current to target position
     const distanceToTarget: Size = subtractPoints(targetBallPosition, currentBallPosition);
@@ -202,11 +202,11 @@ window.addEventListener("load", async () => {
         // Check if the ball touches the browser window's border
         let touchDirection: Direction;
         if (overlaps($('#ball'), $('.left_paddle'))) {
-          //links
+          //left
           touchDirection = Direction.leftPaddle;
         }
         if (overlaps($('#ball'), $('.right_paddle'))) {
-          //links
+          //right
           touchDirection = Direction.rightPaddle;
         }
         if ((animatedPosition.x - ballHalfSize.width) < 0) { touchDirection = Direction.left; }
@@ -225,8 +225,6 @@ window.addEventListener("load", async () => {
 
   /** Move the center of the ball to given position **/
   function moveBall(targetPosition: Point): void {
-    // Note the 'px' at the end of the coordinates for CSS. Don't
-    // forget it. Without the 'px', it doesn't work.
     const leftPos = `${targetPosition.x - ballHalfSize.width}px`;
     const topPos = `${targetPosition.y - ballHalfSize.height}px`;
 
@@ -264,6 +262,8 @@ window.addEventListener("load", async () => {
   }
 });
 
+//------COllision Detection----------------
+
 let overlaps = (function () {
   function getPositions(elem) {
     let pos, width, height;
@@ -287,32 +287,37 @@ let overlaps = (function () {
   };
 })();
 
-/**************************************************************************
-  Demo for a socket.io client
-  NOTE: This code has not been optimized for size or speed. It was written
-        with ease of understanding in mind.
-**************************************************************************/
-window.addEventListener('load', async () => {
-  const keys = <HTMLUListElement>document.getElementById('keys');
+//----------SOCKET.IO------------------
+//declare const io: any; // This object will be provided by Socket.io
+const keys = <HTMLUListElement>document.getElementById('keys');
 
-  // Establish connection with socket.io server. Note that this just works
-  // because `<script src="/socket.io/socket.io.js"></script>` is in index.html
-  const socket = io();
+// Establish connection with socket.io server
+//const socket: SocketIO.Server = io();
+const socket = io();
 
-  // Handle browser's keydown event
-  document.addEventListener('keydown', event => {
-    if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
-      // Send ArrowKey message to server
-      socket.emit('ArrowKey', event.code);
-    }
-  });
-
-  // Handle ArrowKey message received from server (i.e. user pressed
-  // an arrow key in a different browser window).
-  socket.on('ArrowKey', code => {
-    // Add code of the pressed key to HTML list
-    const newLi = document.createElement('li');
-    newLi.innerText = code;
-    keys.appendChild(newLi);
-  })
+// Handle browser's keydown event
+document.addEventListener('keydown', event => {
+  if (event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+    // Send ArrowKey message to server
+    socket.emit('ArrowKey', event.code);
+  }
 });
+
+// Handle ArrowKey message received from server
+socket.on('ArrowKey', code => {
+  // Add code of the pressed key to HTML list
+  const newLi = document.createElement('li');
+  newLi.innerText = code;
+  keys.appendChild(newLi);
+})
+
+socket.on('login', function (message) {
+
+  console.log(`${message}`);
+})
+
+socket.on('player left', function (message) {
+  console.log(`${message}`);
+})
+
+
